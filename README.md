@@ -1,11 +1,61 @@
-#**Readme generado con IA**
-# 🏗️ Comparador de pdfs
+# 📄 Comparador de PDFs (Multi-página)
+# Readme generado con IA
 
-Aplicación web para comparar dos versiones de planos técnicos en formato PDF, detectando y visualizando diferencias automáticamente mediante procesamiento de imágenes.
+Una aplicación web sencilla y potente para comparar **dos archivos PDF completos** y detectar visualmente cualquier cambio entre ellos.
 
-## 📋 Descripción
+> **💡 El Problema:**
+> Herramientas actuales como el comparador de versiones de **Autodesk Construction Cloud (ACC)** o BIM 360, a fecha de hoy (04/12/2025), solo permiten comparar documentos **página por página**. Si tienes un documento de 50 páginas, tienes que hacer 50 comparaciones manuales.
+>
+> **✅ La Solución:**
+> Esta herramienta automatiza el proceso, comparando **todas las páginas de una sola vez** y generando un único archivo PDF descargable con todas las diferencias resaltadas.
 
-Esta herramienta profesional permite comparar planos arquitectónicos, de ingeniería o cualquier tipo de documentación técnica en PDF. Utiliza algoritmos avanzados de visión por computadora para:
+## 📋 ¿Qué hace?
+
+Toma dos versiones de un archivo PDF (Versión A y Versión B) y genera un **nuevo PDF** donde se superponen ambas versiones.
+
+- **Alinea las páginas:** Si el documento se movió o escaneó un poco chueco, el sistema intenta corregirlo automáticamente.
+- **Detecta cambios:** Compara el contenido visualmente.
+- **Resalta las diferencias:**
+  - 🟢 **Verde**: Texto o gráficos nuevos (añadidos en la Versión B).
+  - 🟣 **Magenta**: Texto o gráficos borrados (estaban en la A, pero no en la B).
+  - ⚪ **Gris Tenue**: Todo lo que no cambió (para dar contexto).
+
+## ✨ Características Principales
+
+- **Comparación Total:** Procesa documentos enteros, no importa cuántas páginas tengan.
+- **Alineación Inteligente:** Usa algoritmos de visión (ORB) para encuadrar las páginas antes de comparar.
+- **Ignora "Ruido":** Configurado para ignorar pequeños defectos de escaneo o vibraciones de píxeles (< 5px).
+- **Alta Precisión:** Capaz de detectar cambios sutiles en texto (letras cambiadas, comas, números).
+- **Privacidad:** Procesamiento local o en tu propia instancia de nube; los archivos no se guardan permanentemente.
+
+## 🚀 Cómo Usarlo (Versión Web)
+
+Si has desplegado la herramienta en Streamlit Cloud:
+
+1.  **Sube el archivo original** (Referencia) en la columna izquierda.
+2.  **Sube el archivo nuevo** (Modificado) en la columna derecha.
+3.  Haz clic en el botón **"🔍 Iniciar Comparación"**.
+4.  Espera unos segundos/minutos (dependiendo del tamaño del PDF).
+5.  Descarga el archivo `Reporte_Diferencias.pdf`.
+
+## 🛠️ Instalación en tu PC (Local)
+
+Si prefieres ejecutarlo en tu propia computadora:
+
+### Requisitos
+- Tener instalado **Python 3.10+**
+- Tener instalado **Poppler** (herramienta necesaria para leer PDFs).
+
+#### 1. Instalar Poppler
+- **Windows:** Descarga los binarios [aquí](https://github.com/oschwartz10612/poppler-windows/releases/), descomprime y añade la carpeta `bin` a tu PATH de Windows.
+- **Mac:** `brew install poppler`
+- **Linux:** `sudo apt-get install poppler-utils`
+
+#### 2. Instalar Librerías
+Abre tu terminal en la carpeta del proyecto y ejecuta:
+
+```bash
+pip install -r requirements.txt
 
 - **Alinear automáticamente** las hojas, incluso si tienen escalas o rotaciones ligeramente diferentes
 - **Detectar diferencias** con precisión submilimétrica
@@ -198,5 +248,6 @@ Este proyecto es de código abierto y está disponible bajo la [MIT License](LIC
 ---
 
 ⭐ Si encuentras útil este proyecto, considera darle una estrella en GitHub
+
 
 
