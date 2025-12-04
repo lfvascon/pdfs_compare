@@ -9,6 +9,21 @@ Una aplicación web sencilla y potente para comparar **dos archivos PDF completo
 > **✅ La Solución:**
 > Esta herramienta automatiza el proceso, comparando **todas las páginas de una sola vez** y generando un único archivo PDF descargable con todas las diferencias resaltadas.
 
+## 🔒 Seguridad y Privacidad
+
+### Almacenamiento de archivos
+
+- **Temporales**: Los PDFs subidos se guardan en `/tmp/` del servidor (filesystem efímero)
+- **Eliminación automática**: Todos los archivos se eliminan inmediatamente después del procesamiento
+- **Sin persistencia**: Nada se guarda permanentemente
+- **Aislamiento**: Cada sesión de usuario está completamente aislada
+
+### Recomendaciones de seguridad
+
+- ✅ **Archivos confidenciales**: La app elimina archivos inmediatamente
+- ✅ **Sesiones aisladas**: Otros usuarios no pueden acceder a tus archivos
+- ⚠️ **Datos sensibles**: Si trabajas con información clasificada, considera deployar en tu propia infraestructura
+- ⚠️ **Sin encriptación**: Los archivos temporales no están encriptados en reposo
 ## 📋 ¿Qué hace?
 
 Toma dos versiones de un archivo PDF (Versión A y Versión B) y genera un **nuevo PDF** donde se superponen ambas versiones.
@@ -248,6 +263,7 @@ Este proyecto es de código abierto y está disponible bajo la [MIT License](LIC
 ---
 
 ⭐ Si encuentras útil este proyecto, considera darle una estrella en GitHub
+
 
 
 
