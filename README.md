@@ -193,9 +193,10 @@ Este proyecto es de código abierto y está disponible bajo la [MIT License](LIC
 
 ## 👤 Autor
 
-**ACCIONA FAB**
+**LFVASCON GEMINIPRO DEEPSEEK CURSOR CHAT AGENT**
 
 ---
 
 ⭐ Si encuentras útil este proyecto, considera darle una estrella en GitHub
+
 
