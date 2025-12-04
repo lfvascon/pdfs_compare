@@ -37,10 +37,10 @@ st.markdown(
 
 col1, col2 = st.columns(2)
 file1 = col1.file_uploader(
-    "📂 Plano Original (Referencia)", type=["pdf"]
+    "📂 pdf Original (Referencia)", type=["pdf"]
 )
 file2 = col2.file_uploader(
-    "📂 Plano Nuevo (Modificado)", type=["pdf"]
+    "📂 pdf Nuevo (Modificado)", type=["pdf"]
 )
 
 if st.button("🔍 Iniciar Comparación") and file1 and file2:
@@ -121,3 +121,4 @@ if st.button("🔍 Iniciar Comparación") and file1 and file2:
         cleanup_temp_files(*temp_files)
         if output_pdf_path:
             cleanup_temp_files(output_pdf_path)
+
