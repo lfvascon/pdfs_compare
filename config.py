@@ -24,8 +24,9 @@ class ProcessingConfig:
 class AppConfig:
     """Application-level configuration."""
 
-    page_title: str = "Comparador de Planos Pro"
+    page_title: str = "Comparador de pdfs"
     page_icon: str = "📐"
     layout: str = "wide"
     output_filename: str = "Reporte_Diferencias.pdf"
+
 
