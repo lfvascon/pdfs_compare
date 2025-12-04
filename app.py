@@ -37,10 +37,10 @@ st.markdown(
 
 col1, col2 = st.columns(2)
 file1 = col1.file_uploader(
-    "📂 pdf Original (Referencia)", type=["pdf"]
+    "📂 Plano Original (Referencia)", type=["pdf"]
 )
 file2 = col2.file_uploader(
-    "📂 pdf Nuevo (Modificado)", type=["pdf"]
+    "📂 Plano Nuevo (Modificado)", type=["pdf"]
 )
 
 if st.button("🔍 Iniciar Comparación") and file1 and file2:
@@ -98,14 +98,16 @@ if st.button("🔍 Iniciar Comparación") and file1 and file2:
 
         status.success("✅ ¡Proceso terminado!")
 
-        # Download button
+        # Read PDF into memory and provide download
         with open(output_pdf_path, "rb") as pdf_file:
-            st.download_button(
-                "⬇️ Descargar Reporte PDF",
-                pdf_file,
-                file_name=config.output_filename,
-                mime="application/pdf",
-            )
+            pdf_bytes = pdf_file.read()
+        
+        st.download_button(
+            "⬇️ Descargar Reporte PDF",
+            pdf_bytes,
+            file_name=config.output_filename,
+            mime="application/pdf",
+        )
 
     except FileNotFoundError as e:
         st.error(f"❌ Archivo no encontrado: {e}")
@@ -115,10 +117,7 @@ if st.button("🔍 Iniciar Comparación") and file1 and file2:
         st.error(f"❌ Ocurrió un error inesperado: {e}")
         st.exception(e)
     finally:
-        # Cleanup temporary files
+        # Cleanup ALL temporary files immediately for security
         cleanup_temp_files(*temp_files)
-        # Cleanup output PDF if exists (optional, user might want to keep it)
-        # Uncomment if you want to auto-delete output PDF:
-        # if output_pdf_path and os.path.exists(output_pdf_path):
-        #     cleanup_temp_files(output_pdf_path)
-
+        if output_pdf_path:
+            cleanup_temp_files(output_pdf_path)
