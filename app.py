@@ -25,10 +25,10 @@ st.set_page_config(
 Image.MAX_IMAGE_PIXELS = None
 
 # UI
-st.title("🏗️ Comparador de Planos Premium")
+st.title("🏗️ Comparador de pdfs")
 st.markdown(
     """
-    Sube dos versiones de un plano (PDF). El sistema alineará las hojas, limpiará el ruido 
+    Sube dos pdfs. El sistema alineará las hojas, limpiará el ruido 
     y resaltará las diferencias:
     - **:green[VERDE]:** Elementos nuevos.
     - **:violet[MAGENTA]:** Elementos eliminados.
@@ -37,10 +37,10 @@ st.markdown(
 
 col1, col2 = st.columns(2)
 file1 = col1.file_uploader(
-    "📂 Plano Original (Referencia)", type=["pdf"]
+    "📂 pdf Original (Referencia)", type=["pdf"]
 )
 file2 = col2.file_uploader(
-    "📂 Plano Nuevo (Modificado)", type=["pdf"]
+    "📂 pdf Nuevo (Modificado)", type=["pdf"]
 )
 
 if st.button("🔍 Iniciar Comparación") and file1 and file2:
@@ -121,3 +121,4 @@ if st.button("🔍 Iniciar Comparación") and file1 and file2:
         # Uncomment if you want to auto-delete output PDF:
         # if output_pdf_path and os.path.exists(output_pdf_path):
         #     cleanup_temp_files(output_pdf_path)
+
