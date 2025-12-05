@@ -1,0 +1,14 @@
+[project]
+name = "pdfs-compare"
+version = "0.1.0"
+description = "A web application for comparing PDF documents and detecting visual differences"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "streamlit>=1.28.0",
+    "opencv-python-headless>=4.8.0",
+    "pdf2image>=1.16.3",
+    "numpy>=1.24.0",
+    "Pillow>=10.0.0",
+]
+
