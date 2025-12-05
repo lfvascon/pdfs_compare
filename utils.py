@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import BinaryIO, Optional
 
 from PIL import Image
-# import pdfplumber
+import pdfplumber
 
 
 def save_uploaded_file(
@@ -130,5 +130,4 @@ def save_pdf_from_images(
     
     # Clean up images after saving
     del rgb_images
-
     gc.collect()
