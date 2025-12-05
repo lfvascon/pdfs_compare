@@ -6,7 +6,7 @@ from dataclasses import dataclass
 class ProcessingConfig:
     """Configuration for image processing parameters."""
 
-    dpi: int = 200
+    dpi: int = 300
     min_area_noise: int = 5
     tolerance_kernel_size: tuple[int, int] = (2, 2)
     tolerance_iterations: int = 1
@@ -28,5 +28,6 @@ class AppConfig:
     page_icon: str = "📐"
     layout: str = "wide"
     output_filename: str = "Reporte_Diferencias.pdf"
+
 
 
