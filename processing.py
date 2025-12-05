@@ -1,4 +1,5 @@
 """Image processing functions for PDF comparison."""
+import gc
 import cv2
 import numpy as np
 from PIL import Image
@@ -30,6 +31,7 @@ def clean_noise_mask(
         if cv2.contourArea(contour) > min_area:
             cv2.drawContours(mask_clean, [contour], -1, 255, -1)
 
+    del contours  # Free memory explicitly
     return mask_clean
 
 
@@ -69,9 +71,11 @@ def align_image(
     keypoints2, descriptors2 = orb.detectAndCompute(gray_base, None)
 
     if descriptors1 is None or descriptors2 is None:
-        return cv2.resize(
+        result = cv2.resize(
             img_to_align, (base_img.shape[1], base_img.shape[0])
         )
+        del gray_base, gray_align, orb, keypoints1, keypoints2, descriptors1, descriptors2
+        return result
 
     # Feature matching
     matcher = cv2.DESCRIPTOR_MATCHER_BRUTEFORCE_HAMMING
@@ -81,9 +85,11 @@ def align_image(
     good_matches = matches[:int(len(matches) * config.match_percentage)]
 
     if len(good_matches) < config.min_matches:
-        return cv2.resize(
+        result = cv2.resize(
             img_to_align, (base_img.shape[1], base_img.shape[0])
         )
+        del gray_base, gray_align, orb, keypoints1, keypoints2, descriptors1, descriptors2, matches, good_matches, bf
+        return result
 
     # Extract matching points
     points1 = np.zeros((len(good_matches), 2), dtype=np.float32)
@@ -99,15 +105,20 @@ def align_image(
     )
 
     if homography is None:
-        return cv2.resize(
+        result = cv2.resize(
             img_to_align, (base_img.shape[1], base_img.shape[0])
         )
+        del gray_base, gray_align, orb, keypoints1, keypoints2, descriptors1, descriptors2, matches, good_matches, bf, points1, points2
+        return result
 
     # Warp image
     height, width = base_img.shape[:2]
     img_aligned = cv2.warpPerspective(
         img_to_align, homography, (width, height)
     )
+
+    # Clean up intermediate variables
+    del gray_base, gray_align, orb, keypoints1, keypoints2, descriptors1, descriptors2, matches, good_matches, bf, points1, points2, homography
 
     return img_aligned
 
@@ -117,7 +128,7 @@ def process_page(
     modified_page: Optional[Image.Image],
     config: ProcessingConfig = ProcessingConfig(),
 ) -> Optional[Image.Image]:
-    """Process a single page comparison.
+    """Process a single page comparison with aggressive memory cleanup.
 
     Args:
         base_page: Original page image (PIL Image).
@@ -159,6 +170,9 @@ def process_page(
             (base_array.shape[1], base_array.shape[0])
         )
 
+    # Free original images after alignment
+    del base_page, modified_page
+
     # Convert to grayscale
     gray_base = (
         cv2.cvtColor(base_array, cv2.COLOR_RGB2GRAY)
@@ -171,6 +185,9 @@ def process_page(
         else aligned_array
     )
 
+    # Free RGB arrays
+    del base_array, aligned_array
+
     # Invert and threshold
     inv_base = cv2.bitwise_not(gray_base)
     inv_aligned = cv2.bitwise_not(gray_aligned)
@@ -182,7 +199,10 @@ def process_page(
         inv_aligned, config.threshold_value, 255, cv2.THRESH_TOZERO
     )
 
-    # Apply tolerance (dilate)
+    # Free inverted images
+    del inv_base, inv_aligned
+
+    # Apply tolerance (dilate) BEFORE deleting bin_base and bin_aligned
     kernel = np.ones(config.tolerance_kernel_size, np.uint8)
     base_dilated = cv2.dilate(
         bin_base, kernel, iterations=config.tolerance_iterations
@@ -191,15 +211,21 @@ def process_page(
         bin_aligned, kernel, iterations=config.tolerance_iterations
     )
 
-    # Find differences
+    # Find differences BEFORE deleting bin_base and bin_aligned
     raw_green = cv2.subtract(bin_aligned, base_dilated)
     raw_magenta = cv2.subtract(bin_base, aligned_dilated)
+
+    # Free binary images AFTER using them
+    del bin_base, bin_aligned, kernel, base_dilated, aligned_dilated
 
     # Clean noise
     _, mask_green_bin = cv2.threshold(raw_green, 1, 255, cv2.THRESH_BINARY)
     _, mask_magenta_bin = cv2.threshold(
         raw_magenta, 1, 255, cv2.THRESH_BINARY
     )
+
+    # Free raw differences
+    del raw_green, raw_magenta
 
     clean_green = clean_noise_mask(
         mask_green_bin, min_area=config.min_area_noise
@@ -208,7 +234,10 @@ def process_page(
         mask_magenta_bin, min_area=config.min_area_noise
     )
 
-    # Create ghost effect background
+    # Free unclean masks
+    del mask_green_bin, mask_magenta_bin
+
+    # Create ghost effect background - KEEP gray_base until here
     ghost_bg = cv2.addWeighted(
         gray_base,
         config.ghost_base_weight,
@@ -216,11 +245,21 @@ def process_page(
         config.ghost_bg_weight,
         0,
     )
+    
+    # Now we can free gray_base
+    del gray_base, gray_aligned
+    
     final_img = cv2.cvtColor(ghost_bg, cv2.COLOR_GRAY2RGB)
+    del ghost_bg
 
     # Apply color highlights
     final_img[clean_green > 0] = config.green_color
     final_img[clean_magenta > 0] = config.magenta_color
 
-    return Image.fromarray(final_img)
+    # Free masks
+    del clean_green, clean_magenta
 
+    result = Image.fromarray(final_img)
+    del final_img
+
+    return result

@@ -1,4 +1,5 @@
 """Main Streamlit application for PDF comparison."""
+import gc
 import streamlit as st
 from PIL import Image
 from typing import Optional
@@ -44,6 +45,13 @@ file2 = col2.file_uploader(
 )
 
 if st.button("🔍 Iniciar Comparación") and file1 and file2:
+    # Validar tamaño de archivos
+    max_size_mb = 50
+    max_size = max_size_mb * 1024 * 1024
+    if file1.size > max_size or file2.size > max_size:
+        st.error(f"❌ Los archivos no deben exceder {max_size_mb}MB")
+        st.stop()
+
     status = st.empty()
     progress_bar = st.progress(0)
     temp_files: list[str] = []
@@ -72,17 +80,34 @@ if st.button("🔍 Iniciar Comparación") and file1 and file2:
             cleanup_temp_files(*temp_files)
             st.stop()
 
-        # Process each page
+        # Limitar número de páginas
+        if max_pages > 50:
+            st.warning(f"⚠️ El PDF tiene {max_pages} páginas. Procesando solo las primeras 50.")
+            pages_a = pages_a[:50]
+            pages_b = pages_b[:50]
+            max_pages = 50
+
+        # Process each page and free memory
         result_images: list[Image.Image] = []
 
         for i in range(max_pages):
             status.text(f"⚙️ Procesando Hoja {i+1} de {max_pages}...")
+            
+            # Process page
             result = process_page(
                 pages_a[i], pages_b[i], processing_config
             )
 
             if result is not None:
                 result_images.append(result)
+            
+            # Free original images after processing
+            pages_a[i] = None
+            pages_b[i] = None
+
+            # Clean memory every 3 pages
+            if (i + 1) % 3 == 0:
+                gc.collect()
 
             progress_bar.progress((i + 1) / max_pages)
 
@@ -98,7 +123,15 @@ if st.button("🔍 Iniciar Comparación") and file1 and file2:
 
         status.success("✅ ¡Proceso terminado!")
 
-        # Read PDF into memory and provide download
+        # FREE MEMORY BEFORE DOWNLOAD
+        # Clear image list
+        del result_images
+        # Clear page lists
+        del pages_a, pages_b
+        # Force garbage collection
+        gc.collect()
+
+        # Read PDF into memory AFTER cleanup
         with open(output_pdf_path, "rb") as pdf_file:
             pdf_bytes = pdf_file.read()
         
@@ -113,12 +146,14 @@ if st.button("🔍 Iniciar Comparación") and file1 and file2:
         st.error(f"❌ Archivo no encontrado: {e}")
     except ValueError as e:
         st.error(f"❌ Error de validación: {e}")
+    except MemoryError:
+        st.error("❌ Memoria insuficiente. Intenta con PDFs más pequeños o menos páginas.")
     except Exception as e:
         st.error(f"❌ Ocurrió un error inesperado: {e}")
-        st.exception(e)
     finally:
-        # Cleanup ALL temporary files immediately for security
+        # Cleanup ALL temporary files
         cleanup_temp_files(*temp_files)
         if output_pdf_path:
             cleanup_temp_files(output_pdf_path)
-
+        # Force final cleanup
+        gc.collect()

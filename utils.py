@@ -1,11 +1,12 @@
 """Utility functions for file handling and PDF processing."""
 import os
+import gc
 import tempfile
 from pathlib import Path
 from typing import BinaryIO, Optional
 
-from pdf2image import convert_from_path
 from PIL import Image
+import pdfplumber
 
 
 def save_uploaded_file(
@@ -35,7 +36,7 @@ def convert_pdf_to_images(
     pdf_path: str,
     dpi: int = 200,
 ) -> list[Image.Image]:
-    """Convert PDF pages to PIL Images.
+    """Convert PDF pages to PIL Images using pdfplumber.
 
     Args:
         pdf_path: Path to PDF file.
@@ -47,7 +48,18 @@ def convert_pdf_to_images(
     if not os.path.exists(pdf_path):
         raise FileNotFoundError(f"PDF file not found: {pdf_path}")
 
-    return convert_from_path(pdf_path, dpi=dpi)
+    images = []
+    
+    try:
+        with pdfplumber.open(pdf_path) as pdf:
+            for page in pdf.pages:
+                # Render page to image with DPI scaling
+                img = page.to_image(resolution=dpi).original
+                images.append(img)
+    except Exception as e:
+        raise RuntimeError(f"Error converting PDF to images: {e}")
+    
+    return images
 
 
 def normalize_page_lists(
@@ -80,7 +92,7 @@ def cleanup_temp_files(*file_paths: str) -> None:
         if file_path and os.path.exists(file_path):
             try:
                 os.remove(file_path)
-            except OSError:
+            except (OSError, Exception):
                 pass  # Ignore errors during cleanup
 
 
@@ -88,7 +100,7 @@ def save_pdf_from_images(
     images: list[Image.Image],
     output_path: str,
 ) -> None:
-    """Save list of images as multi-page PDF.
+    """Save list of images as multi-page PDF optimized for memory.
 
     Args:
         images: List of PIL Images.
@@ -100,9 +112,22 @@ def save_pdf_from_images(
     if not images:
         raise ValueError("Cannot save PDF: images list is empty")
 
-    images[0].save(
+    # Convert all to RGB and optimize
+    rgb_images = []
+    for img in images:
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+        rgb_images.append(img)
+    
+    # Save with optimization
+    rgb_images[0].save(
         output_path,
         save_all=True,
-        append_images=images[1:] if len(images) > 1 else None,
+        append_images=rgb_images[1:] if len(rgb_images) > 1 else None,
+        optimize=True,
+        quality=85,  # Reduce quality slightly for compression
     )
-
+    
+    # Clean up images after saving
+    del rgb_images
+    gc.collect()
